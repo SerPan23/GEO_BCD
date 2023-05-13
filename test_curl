@@ -10,3 +10,15 @@ curl -d '{"vertex1":{"latitude":0,"longitude":0}, "vertex2":{"latitude":100,"lon
 curl -d '{"position":{"latitude":10,"longitude":20} }' http://0.0.0.0:8080/devices
 
 curl -d '{"position":{"latitude":10,"longitude":20} }' http://0.0.0.0:8080/devices/1
+
+curl -d '{"position":{"latitude":55.77150817855895,"longitude":37.691811650845615}}' http://0.0.0.0:8080/devices
+
+curl -d '{"position":{"latitude":55.77092758723924,"longitude":37.69151124343593}  }' http://0.0.0.0:8080/devices/40
+
+ylk
+curl -d '{"position":{"latitude":55.77150817855895,"longitude":37.691811650845615}  }' http://0.0.0.0:8080/devices/55
+"position":{"latitude":55.77150817855895,"longitude":37.691811650845615} 
+"position":{"latitude":55.77092758723924,"longitude":37.69151124343593} 
+
+gz
+curl -d '{"position":{"latitude":55.765850822504866,"longitude":37.68594297752102}  }' http://0.0.0.0:8080/devices/40

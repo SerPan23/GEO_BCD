@@ -79,6 +79,8 @@ type DeviceInput struct {
 func CreateDevice(db *gorm.DB) gin.HandlerFunc {
 	fn := func(c *gin.Context) {
 
+		// fmt.Println(c.Request)
+
 		var input DeviceInput
 		if err := c.ShouldBindJSON(&input); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -129,7 +131,7 @@ func MakeVector(V1 models.Position, V2 models.Position) models.Position {
 // EV[i] = V[i+1] - V[i], where V[] - vertices in order
 // PV[i] = P - V[i]
 // Cross[i] = CrossProduct(EV[i], PV[i]) = EV[i].X * PV[i].Y - EV[i].Y * PV[i].X
-func IsInZone(device models.Device, verts []models.Position) bool {
+func IsInZone(devicePos models.Position, verts []models.Position) bool {
 	size := 4
 
 	var ev []models.Position
@@ -139,7 +141,7 @@ func IsInZone(device models.Device, verts []models.Position) bool {
 
 	var pv []models.Position
 	for i := 0; i < size; i++ {
-		pv = append(pv, MakeVector(verts[i], device.Position))
+		pv = append(pv, MakeVector(verts[i], devicePos))
 	}
 
 	var cross []float64
@@ -149,12 +151,37 @@ func IsInZone(device models.Device, verts []models.Position) bool {
 
 	for i := 0; i < size-1; i++ {
 		// fmt.Println(cross[i])
-		if cross[i] < 0 {
+		if cross[i] > 0 {
 			return false
 		}
 	}
 
 	return true
+}
+
+func ExpandPositionNumber(pos models.Position) models.Position {
+	scale := 1000000.0
+	return models.Position{Latitude: pos.Latitude * scale, Longitude: pos.Longitude * scale}
+}
+
+func CheckDeviceInZone(device models.Device, db *gorm.DB) bool {
+	var zones []models.Zone
+	db.Find(&zones)
+	var is_in_zone bool = false
+
+	for _, z := range zones {
+		vertexes := []models.Position{
+			ExpandPositionNumber(z.Vertex1),
+			ExpandPositionNumber(z.Vertex2),
+			ExpandPositionNumber(z.Vertex3),
+			ExpandPositionNumber(z.Vertex4)}
+		is_in_zone = IsInZone(ExpandPositionNumber(device.Position), vertexes)
+		if is_in_zone {
+			break
+		}
+		// fmt.Println(is_in_zone)
+	}
+	return is_in_zone
 }
 
 func UpdateDevice(db *gorm.DB) gin.HandlerFunc {
@@ -175,15 +202,20 @@ func UpdateDevice(db *gorm.DB) gin.HandlerFunc {
 
 		db.Model(&device).Updates(input)
 
-		var zones []models.Zone
-		db.Find(&zones)
-		var is_in_zone bool = false
+		// var zones []models.Zone
+		// db.Find(&zones)
+		// var is_in_zone bool = false
 
-		for _, z := range zones {
-			vertexes := []models.Position{z.Vertex1, z.Vertex2, z.Vertex3, z.Vertex4}
-			is_in_zone = IsInZone(device, vertexes)
-			// fmt.Println(is_in_zone)
-		}
+		// for _, z := range zones {
+		// 	vertexes := []models.Position{
+		// 		ExpandPositionNumber(z.Vertex1),
+		// 		ExpandPositionNumber(z.Vertex2),
+		// 		ExpandPositionNumber(z.Vertex3),
+		// 		ExpandPositionNumber(z.Vertex4)}
+		// 	is_in_zone = IsInZone(ExpandPositionNumber(device.Position), vertexes)
+		// 	// fmt.Println(is_in_zone)
+		// }
+		is_in_zone := CheckDeviceInZone(device, db)
 
 		c.JSON(http.StatusOK, gin.H{"data": device, "is_in_zone": is_in_zone})
 	}
