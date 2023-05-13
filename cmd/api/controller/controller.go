@@ -202,20 +202,10 @@ func UpdateDevice(db *gorm.DB) gin.HandlerFunc {
 
 		db.Model(&device).Updates(input)
 
-		// var zones []models.Zone
-		// db.Find(&zones)
-		// var is_in_zone bool = false
-
-		// for _, z := range zones {
-		// 	vertexes := []models.Position{
-		// 		ExpandPositionNumber(z.Vertex1),
-		// 		ExpandPositionNumber(z.Vertex2),
-		// 		ExpandPositionNumber(z.Vertex3),
-		// 		ExpandPositionNumber(z.Vertex4)}
-		// 	is_in_zone = IsInZone(ExpandPositionNumber(device.Position), vertexes)
-		// 	// fmt.Println(is_in_zone)
-		// }
 		is_in_zone := CheckDeviceInZone(device, db)
+
+		device.IsInZone = is_in_zone
+		db.Save(&device)
 
 		c.JSON(http.StatusOK, gin.H{"data": device, "is_in_zone": is_in_zone})
 	}

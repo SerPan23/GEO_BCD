@@ -21,4 +21,5 @@ type Device struct {
 	ID        uint     `json:"id" gorm:"primary_key"`
 	Position  Position `json:"position" gorm:"embedded"`
 	TimeStamp string   `json:"timestamp"`
+	IsInZone  bool     `json:"is_in_zone"`
 }
