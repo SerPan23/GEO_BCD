@@ -11,3 +11,10 @@ For information about contributors see [AUTHORS](AUTHORS.md).
 ## Project Structure
 
 The project has a structure api that have funcs to create/delete zones and track devices
+
+# How to start
+```
+cd ./cmd/api
+go mod vendor
+go run main.go
+```
