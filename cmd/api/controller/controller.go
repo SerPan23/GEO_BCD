@@ -38,6 +38,7 @@ func GetAllZone(db *gorm.DB) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 		var zones []models.Zone
 		db.Find(&zones)
+		UpdateAllDevices(db)
 		ctx.JSON(http.StatusOK, gin.H{"data": zones})
 	}
 	return gin.HandlerFunc(fn)
@@ -51,6 +52,7 @@ func FindZoneById(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 			return
 		}
+		UpdateAllDevices(db)
 
 		c.JSON(http.StatusOK, gin.H{"data": zone})
 	}
@@ -65,6 +67,8 @@ func DeleteZoneById(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		db.Delete(&zone)
+
+		UpdateAllDevices(db)
 
 		c.JSON(http.StatusOK, gin.H{"data": true})
 	}
@@ -151,7 +155,7 @@ func IsInZone(devicePos models.Position, verts []models.Position) bool {
 
 	for i := 0; i < size-1; i++ {
 		// fmt.Println(cross[i])
-		if cross[i] > 0 {
+		if cross[i] < 0 {
 			return false
 		}
 	}
@@ -160,7 +164,7 @@ func IsInZone(devicePos models.Position, verts []models.Position) bool {
 }
 
 func ExpandPositionNumber(pos models.Position) models.Position {
-	scale := 1000000.0
+	scale := 10000000.0
 	return models.Position{Latitude: pos.Latitude * scale, Longitude: pos.Longitude * scale}
 }
 
@@ -225,4 +229,15 @@ func DeleteDeviceById(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"data": true})
 	}
 	return gin.HandlerFunc(fn)
+}
+
+func UpdateAllDevices(db *gorm.DB) {
+	var devices []models.Device
+	db.Find(&devices)
+	for _, device := range devices {
+		is_in_zone := CheckDeviceInZone(device, db)
+
+		device.IsInZone = is_in_zone
+		db.Save(&device)
+	}
 }
