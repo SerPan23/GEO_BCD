@@ -153,9 +153,10 @@ func IsInZone(devicePos models.Position, verts []models.Position) bool {
 		cross = append(cross, CrossProduct(ev[i], pv[i]))
 	}
 
+	sign := (cross[0] > 0)
 	for i := 0; i < size-1; i++ {
 		// fmt.Println(cross[i])
-		if cross[i] < 0 {
+		if (cross[i] > 0) != sign {
 			return false
 		}
 	}
@@ -164,7 +165,7 @@ func IsInZone(devicePos models.Position, verts []models.Position) bool {
 }
 
 func ExpandPositionNumber(pos models.Position) models.Position {
-	scale := 10000000.0
+	scale := 1000000.0
 	return models.Position{Latitude: pos.Latitude * scale, Longitude: pos.Longitude * scale}
 }
 
@@ -183,7 +184,6 @@ func CheckDeviceInZone(device models.Device, db *gorm.DB) bool {
 		if is_in_zone {
 			break
 		}
-		// fmt.Println(is_in_zone)
 	}
 	return is_in_zone
 }
